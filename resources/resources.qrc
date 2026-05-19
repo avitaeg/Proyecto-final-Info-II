@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- Aquí van los sprites cuando los tengan -->
+        <!-- <file>sprites/barco.png</file> -->
+        <!-- <file>sprites/kraken.png</file> -->
+        <!-- <file>sprites/arrecife.png</file> -->
+    </qresource>
+</RCC>
