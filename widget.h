@@ -2,7 +2,9 @@
 #define WIDGET_H
 
 #include <QWidget>
-
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
+#include <QTimer>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Widget;
@@ -19,5 +21,9 @@ public:
 
 private:
     Ui::Widget *ui;
+    QGraphicsScene *scene;
+    QGraphicsPixmapItem *bg1;
+    QTimer *bgTimer;
+
 };
 #endif // WIDGET_H
