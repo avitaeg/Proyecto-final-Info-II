@@ -5,6 +5,8 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QTimer>
+#include "barco.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Widget;
@@ -19,11 +21,16 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
+    //Funciones propias
+
+public slots:
+    void bgMove();
+
 private:
     Ui::Widget *ui;
     QGraphicsScene *scene;
-    QGraphicsPixmapItem *bg1;
+    QGraphicsPixmapItem *bg1, *bg2;
     QTimer *bgTimer;
-
+    Barco *barco;
 };
 #endif // WIDGET_H

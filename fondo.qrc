@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>imagenes/fondo_juego.png</file>
+        <file>imagenes/Barco.png</file>
     </qresource>
 </RCC>
