@@ -9,9 +9,13 @@ class Barco : public QObject, public QGraphicsPixmapItem
 {
     Q_OBJECT
 public:
-    Barco(QGraphicsView *view, const QPixmap pixmapPlayer, const QRectF sceneBounds,QObject *parent = nullptr);
+    Barco(QGraphicsView *view, const QPixmap pixmapPlayer, const QRectF sceneBounds, QObject *parent = nullptr);
 
-signals:
+public slots:
+    void moveUp();
+    void moveDown();
+    void moveLeft();
+    void moveRight();
 
 private:
     QPixmap pixmapPlayer;
