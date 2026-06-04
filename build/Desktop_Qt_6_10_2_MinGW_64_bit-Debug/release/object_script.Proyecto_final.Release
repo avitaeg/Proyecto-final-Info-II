@@ -1,0 +1,10 @@
+release/barco.o
+release/main.o
+release/ola.o
+release/viento.o
+release/widget.o
+release/qrc_fondo.o
+release/moc_barco.o
+release/moc_ola.o
+release/moc_viento.o
+release/moc_widget.o

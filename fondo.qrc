@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>imagenes/fondo_juego.png</file>
         <file>imagenes/Barco.png</file>
+        <file>imagenes/Olas.png</file>
     </qresource>
 </RCC>

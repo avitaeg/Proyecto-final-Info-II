@@ -1,0 +1,10 @@
+debug/barco.o
+debug/main.o
+debug/ola.o
+debug/viento.o
+debug/widget.o
+debug/qrc_fondo.o
+debug/moc_barco.o
+debug/moc_ola.o
+debug/moc_viento.o
+debug/moc_widget.o

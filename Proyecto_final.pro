@@ -11,10 +11,14 @@ CONFIG += c++17
 SOURCES += \
     barco.cpp \
     main.cpp \
+    ola.cpp \
+    viento.cpp \
     widget.cpp
 
 HEADERS += \
     barco.h \
+    ola.h \
+    viento.h \
     widget.h
 
 FORMS += \
