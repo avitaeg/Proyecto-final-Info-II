@@ -10,7 +10,7 @@ Ola::Ola(const QPixmap &sprite, int fila, int columna, QObject *parent)
     QPixmap recorte = sprite.copy(columna * w, fila * h, w, h);
     setPixmap(recorte);
     qDebug() << "Ola recorte size:" << recorte.size() << "isNull:" << recorte.isNull();
-    setScale(0.4);
+    setScale(0.20);
     setZValue(2);
 
     timer = new QTimer(this);
@@ -21,12 +21,8 @@ Ola::Ola(const QPixmap &sprite, int fila, int columna, QObject *parent)
 void Ola::mover()
 {
     setPos(x() - 4, y());
-
     if (scene() && x() < -pixmap().width() * scale())
     {
-        timer->stop();
-        scene()->removeItem(this);
-        deleteLater();
+        setPos(scene()->sceneRect().width(), y());
     }
 }
-

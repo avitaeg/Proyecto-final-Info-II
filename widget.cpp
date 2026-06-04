@@ -26,7 +26,7 @@ Widget::Widget(QWidget *parent)
     scene->addItem(bg1);
     scene->addItem(bg2);
 
-    // Tiempo del fondo fondo
+    // Timer fondo
     bgTimer = new QTimer(this);
     connect(bgTimer, &QTimer::timeout, this, &Widget::bgMove);
     bgTimer->start(10);
@@ -34,24 +34,12 @@ Widget::Widget(QWidget *parent)
     // Barco
     QPixmap pixmapPlayer(":/imagenes/Barco.png");
     barco = new Barco(ui->graphicsView, pixmapPlayer, scene->sceneRect(), this);
-    barco->setScale(0.06);
-    barco->setPos(50, 250);
+    barco->setScale(0.05);
+    barco->setPos(310, 210);
     barco->setZValue(1);
     scene->addItem(barco);
 
-    // Olas iniciales
-    QPixmap spriteOlas(":/imagenes/Olas.png");
-    int posicionesY[4] = {350, 400, 300, 320};
-    int configs[4][2] = {{0,0},{0,1},{1,0},{1,1}};
-    for (int i = 0; i < 4; i++)
-    {
-        Ola *ola = new Ola(spriteOlas, configs[i][0], configs[i][1], this);
-        ola->setPos(200 + i * 150, posicionesY[i]);
-        scene->addItem(ola);
-        olas.append(ola);
-    }
-
-    // Tiempo para crear nuevas olas
+    // Timer para crear olas
     olaTimer = new QTimer(this);
     connect(olaTimer, &QTimer::timeout, this, &Widget::crearOla);
     olaTimer->start(5000);
@@ -73,6 +61,12 @@ Widget::Widget(QWidget *parent)
     colisionTimer = new QTimer(this);
     connect(colisionTimer, &QTimer::timeout, this, &Widget::verificarColisiones);
     colisionTimer->start(50);
+
+    // Timer meta - 60 segundos
+    timerMeta = new QTimer(this);
+    connect(timerMeta, &QTimer::timeout, this, &Widget::juegoGanado);
+    timerMeta->setSingleShot(true);
+    timerMeta->start(60000);
 }
 
 Widget::~Widget()
@@ -97,12 +91,12 @@ void Widget::keyPressEvent(QKeyEvent *event)
     else if (event->key() == Qt::Key_D)
         newX += velocidad;
 
-    // Limitar dentro de la escena
     newX = qBound(scene->sceneRect().left(), newX, scene->sceneRect().right() - bw);
     newY = qBound(scene->sceneRect().top(), newY, scene->sceneRect().bottom() - bh);
 
     barco->setPos(newX, newY);
 }
+
 void Widget::bgMove()
 {
     bg1->setX(bg1->x() - 1);
@@ -117,12 +111,13 @@ void Widget::bgMove()
 
 void Widget::verificarColisiones()
 {
-    // Limpiar olas que ya no están en la escena
-    for (int i = olas.size() - 1; i >= 0; i--)
+    QList<Ola*> olasValidas;
+    for (Ola *ola : olas)
     {
-        if (olas[i]->scene() == nullptr)
-            olas.removeAt(i);
+        if (ola && ola->scene() != nullptr)
+            olasValidas.append(ola);
     }
+    olas = olasValidas;
 
     for (Ola *ola : olas)
     {
@@ -143,14 +138,31 @@ void Widget::verificarColisiones()
         }
     }
 }
+
 void Widget::crearOla()
 {
     QPixmap spriteOlas(":/imagenes/Olas.png");
     int configs[4][2] = {{0,0},{0,1},{1,0},{1,1}};
     int randomConfig = rand() % 4;
+    int carriles[2] = {250, 360};
+    int randomCarril = rand() % 2;
 
     Ola *ola = new Ola(spriteOlas, configs[randomConfig][0], configs[randomConfig][1], this);
-    ola->setPos(scene->sceneRect().width(), 310);
+    ola->setPos(scene->sceneRect().width(), carriles[randomCarril]);
     scene->addItem(ola);
     olas.append(ola);
+}
+
+void Widget::juegoGanado()
+{
+    bgTimer->stop();
+    colisionTimer->stop();
+    olaTimer->stop();
+    timerMeta->stop();
+
+    vidasTexto->setPlainText("¡Encontraste el tesoro!");
+    vidasTexto->setDefaultTextColor(Qt::yellow);
+    vidasTexto->setFont(QFont("Arial", 24, QFont::Bold));
+    vidasTexto->setPos(scene->sceneRect().width() / 2 - 180,
+                       scene->sceneRect().height() / 2 - 20);
 }

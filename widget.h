@@ -28,6 +28,7 @@ public slots:
     void bgMove();
     void verificarColisiones();
     void crearOla();
+    void juegoGanado();
 
 private:
     Ui::Widget *ui;
@@ -41,6 +42,8 @@ private:
     Viento *viento;
     int vidas;
     QGraphicsTextItem *vidasTexto;
+    QTimer *timerMeta;
+
 };
 
 #endif // WIDGET_H
