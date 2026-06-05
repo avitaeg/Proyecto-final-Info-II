@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/imagenes2">
+        <file>imagenes/Fondo_nivel2.png</file>
+        <file>imagenes/kraken.png</file>
+        <file>imagenes/barril.png</file>
+    </qresource>
+</RCC>
