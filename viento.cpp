@@ -1,10 +1,13 @@
 #include "viento.h"
-#include <QPen>
 #include <QBrush>
 #include <QColor>
+#include <QPen>
 
 Viento::Viento(QRectF sceneBounds, QObject *parent)
-    : QObject(parent), QGraphicsRectItem(), sceneBounds(sceneBounds), activo(false)
+    : QObject(parent)
+    , QGraphicsRectItem()
+    , sceneBounds(sceneBounds)
+    , activo(false)
 {
     setRect(0, 0, 120, 400);
     setPen(QPen(QColor(255, 255, 255, 150), 3));
@@ -23,11 +26,9 @@ Viento::Viento(QRectF sceneBounds, QObject *parent)
 
 void Viento::mover()
 {
-    if (activo)
-    {
+    if (activo) {
         setPos(x() - 6, y());
-        if (x() < -200)
-        {
+        if (x() < -200) {
             activo = false;
             setPos(sceneBounds.width(), 0);
         }

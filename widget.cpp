@@ -1,12 +1,13 @@
 #include "widget.h"
 #include "ui_widget.h"
-#include "barco.h"
+#include "nivel2oscuridad.h"   // ← aquí va el include completo
 #include <QDebug>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
     , vidas(3)
+    , m_nivel2(nullptr)
 {
     ui->setupUi(this);
 
@@ -18,7 +19,7 @@ Widget::Widget(QWidget *parent)
 
     // Fondo
     QPixmap originalImagen(":/imagenes/fondo_juego.png");
-    QPixmap mirroredImagen = originalImagen.transformed(QTransform().scale(-1,1));
+    QPixmap mirroredImagen = originalImagen.transformed(QTransform().scale(-1, 1));
     bg1 = new QGraphicsPixmapItem(originalImagen);
     bg2 = new QGraphicsPixmapItem(mirroredImagen);
     bg1->setPos(0, 0);
@@ -67,7 +68,19 @@ Widget::Widget(QWidget *parent)
     connect(timerMeta, &QTimer::timeout, this, &Widget::juegoGanado);
     timerMeta->setSingleShot(true);
     timerMeta->start(60000);
+
+    // Botón Nivel 2
+    m_nivel2 = nullptr;
+    btnNivel2 = new QPushButton("🌑  Ir al Nivel 2", this);
+    btnNivel2->setGeometry(10, 400, 180, 36);
+    btnNivel2->setStyleSheet(
+        "QPushButton{background:#102040;color:white;"
+        "border:2px solid #3a80b8;border-radius:6px;font-size:13px;}"
+        "QPushButton:hover{background:#1a4070;}");
+    btnNivel2->setGeometry(350, 320, 200, 40);;;
+    connect(btnNivel2, &QPushButton::clicked, this, &Widget::iniciarNivel2);
 }
+
 
 Widget::~Widget()
 {
@@ -76,6 +89,11 @@ Widget::~Widget()
 
 void Widget::keyPressEvent(QKeyEvent *event)
 {
+    if (m_nivel2) {
+        m_nivel2->keyPressEvent(event);
+        return;
+    }
+
     int velocidad = viento->estaActivo() ? 5 : 10;
     qreal bw = barco->boundingRect().width() * barco->scale();
     qreal bh = barco->boundingRect().height() * barco->scale();
@@ -93,7 +111,6 @@ void Widget::keyPressEvent(QKeyEvent *event)
 
     newX = qBound(scene->sceneRect().left(), newX, scene->sceneRect().right() - bw);
     newY = qBound(scene->sceneRect().top(), newY, scene->sceneRect().bottom() - bh);
-
     barco->setPos(newX, newY);
 }
 
@@ -111,24 +128,20 @@ void Widget::bgMove()
 
 void Widget::verificarColisiones()
 {
-    QList<Ola*> olasValidas;
-    for (Ola *ola : olas)
-    {
+    QList<Ola *> olasValidas;
+    for (Ola *ola : olas) {
         if (ola && ola->scene() != nullptr)
             olasValidas.append(ola);
     }
     olas = olasValidas;
 
-    for (Ola *ola : olas)
-    {
-        if (barco->collidesWithItem(ola))
-        {
+    for (Ola *ola : olas) {
+        if (barco->collidesWithItem(ola)) {
             vidas--;
             vidasTexto->setPlainText("Vidas: " + QString::number(vidas));
             ola->setPos(scene->sceneRect().width() + 100, ola->y());
 
-            if (vidas <= 0)
-            {
+            if (vidas <= 0) {
                 vidasTexto->setPlainText("¡Game Over!");
                 bgTimer->stop();
                 colisionTimer->stop();
@@ -142,7 +155,7 @@ void Widget::verificarColisiones()
 void Widget::crearOla()
 {
     QPixmap spriteOlas(":/imagenes/Olas.png");
-    int configs[4][2] = {{0,0},{0,1},{1,0},{1,1}};
+    int configs[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     int randomConfig = rand() % 4;
     int carriles[2] = {250, 360};
     int randomCarril = rand() % 2;
@@ -163,6 +176,67 @@ void Widget::juegoGanado()
     vidasTexto->setPlainText("¡Encontraste el tesoro!");
     vidasTexto->setDefaultTextColor(Qt::yellow);
     vidasTexto->setFont(QFont("Arial", 24, QFont::Bold));
-    vidasTexto->setPos(scene->sceneRect().width() / 2 - 180,
-                       scene->sceneRect().height() / 2 - 20);
+    vidasTexto->setPos(scene->sceneRect().width() / 2 - 180, scene->sceneRect().height() / 2 - 20);
+    btnNivel2->raise();
+    btnNivel2->show();
+    btnNivel2->setFocus();
+}
+
+void Widget::iniciarNivel2()
+{
+    // Detener Nivel 1
+    bgTimer->stop();
+    colisionTimer->stop();
+    olaTimer->stop();
+    timerMeta->stop();
+
+    btnNivel2->hide();
+
+    // Crear Nivel 2
+    if (m_nivel2) { m_nivel2->pausar(); delete m_nivel2; }
+    m_nivel2 = new Nivel2Oscuridad(ui->graphicsView, this);
+
+    connect(m_nivel2, &Nivel2Oscuridad::nivelCompletado, this, [this]() {
+        auto* txt = new QGraphicsTextItem("🏴‍☠️ ¡Misión cumplida! El tesoro es tuyo.");
+        txt->setDefaultTextColor(QColor(255,215,0));
+        txt->setFont(QFont("Arial", 22, QFont::Bold));
+        txt->setPos(80, 300);
+        m_nivel2->getEscena()->addItem(txt);
+    });
+
+    connect(m_nivel2, &Nivel2Oscuridad::nivelFallido, this, [this](int pts) {
+        auto* txt = new QGraphicsTextItem(
+            QString("💀 El barco se hundió... Puntos: %1").arg(pts));
+        txt->setDefaultTextColor(Qt::red);
+        txt->setFont(QFont("Arial", 20, QFont::Bold));
+        txt->setPos(80, 320);
+        m_nivel2->getEscena()->addItem(txt);
+        btnNivel2->setText("↩ Reintentar N2");
+        btnNivel2->show();
+        btnNivel2->raise();
+    });
+
+    m_nivel2->iniciar();
+    ui->graphicsView->setFocus();
+    connect(m_nivel2, &Nivel2Oscuridad::nivelFallido, this, [this](int pts) {
+        auto* txt = new QGraphicsTextItem(
+            QString("💀 El barco se hundió... Puntos: %1").arg(pts));
+        txt->setDefaultTextColor(Qt::red);
+        txt->setFont(QFont("Arial", 20, QFont::Bold));
+        txt->setPos(80, 320);
+        m_nivel2->getEscena()->addItem(txt);
+        btnNivel2->setText("↩ Reintentar N2");
+        btnNivel2->show();
+        btnNivel2->raise();
+    });
+
+    m_nivel2->iniciar();
+}
+
+void Widget::keyReleaseEvent(QKeyEvent *event)
+{
+    if (m_nivel2) {
+        m_nivel2->keyReleaseEvent(event);
+        return;
+    }
 }

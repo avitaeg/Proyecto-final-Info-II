@@ -68,7 +68,7 @@ void Nivel2Oscuridad::pausar() {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 void Nivel2Oscuridad::setupFondo()
 {
-    QPixmap px(":/imagenes2/Fondo_nivel2.png");
+    QPixmap px(":/imagenes2/imagenes/Fondo_nivel2.png");
     if (px.isNull()) { px = QPixmap(W, H); px.fill(QColor(5, 8, 25)); }
     px = px.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     m_fondo = new QGraphicsPixmapItem(px);
@@ -177,8 +177,8 @@ void Nivel2Oscuridad::moverBarco()
     if (m_sPress) vy =  VEL_BARCO;
     if (m_aPress) vx = -VEL_BARCO;
     if (m_dPress) vx =  VEL_BARCO;
-    m_bx = qBound(10.0f, m_bx + vx * DT, static_cast<float>(W - 90));
-    m_by = qBound(10.0f, m_by + vy * DT, static_cast<float>(H - 90));
+    m_bx = qBound(0.0f, m_bx + vx * DT, static_cast<float>(W - 80));
+    m_by = qBound(0.0f, m_by + vy * DT, static_cast<float>(H - 80));
     if (m_barcoItem) m_barcoItem->setPos(m_bx, m_by);
 }
 
@@ -241,7 +241,7 @@ void Nivel2Oscuridad::spawnObstaculo()
 {
     if (!m_activo) return;
     if (m_pixBarril.isNull()) {
-        m_pixBarril = QPixmap(":/imagenes2/barril.png");
+        m_pixBarril = QPixmap(":/imagenes2/imagenes/barril.png");
         if (m_pixBarril.isNull()) { m_pixBarril = QPixmap(44,44); m_pixBarril.fill(QColor(139,69,19)); }
         m_pixBarril = m_pixBarril.scaled(44, 44, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }

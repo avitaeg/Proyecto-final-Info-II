@@ -1,9 +1,9 @@
 #ifndef OLA_H
 #define OLA_H
 
-#include <QObject>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QObject>
 #include <QTimer>
 
 class Ola : public QObject, public QGraphicsPixmapItem

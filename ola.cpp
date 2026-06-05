@@ -2,7 +2,8 @@
 #include <QDebug>
 
 Ola::Ola(const QPixmap &sprite, int fila, int columna, QObject *parent)
-    : QObject(parent), QGraphicsPixmapItem()
+    : QObject(parent)
+    , QGraphicsPixmapItem()
 {
     // Recorta la ola correspondiente del spritesheet (2 columnas x 2 filas)
     int w = sprite.width() / 2;
@@ -21,8 +22,7 @@ Ola::Ola(const QPixmap &sprite, int fila, int columna, QObject *parent)
 void Ola::mover()
 {
     setPos(x() - 4, y());
-    if (scene() && x() < -pixmap().width() * scale())
-    {
+    if (scene() && x() < -pixmap().width() * scale()) {
         setPos(scene()->sceneRect().width(), y());
     }
 }
