@@ -8,13 +8,11 @@
 #include <QTimer>
 #include <QList>
 #include <QKeyEvent>
-#include <QPushButton>
 #include <QFont>
 #include "barco.h"
 #include "ola.h"
 #include "viento.h"
 
-// Forward declaration — evita inclusión circular
 class Nivel2Oscuridad;
 
 QT_BEGIN_NAMESPACE
@@ -28,6 +26,7 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
     void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 
 public slots:
     void bgMove();
@@ -35,23 +34,28 @@ public slots:
     void crearOla();
     void juegoGanado();
     void iniciarNivel2();
-    void keyReleaseEvent(QKeyEvent *event);
 
 private:
-    Ui::Widget         *ui;
-    QGraphicsScene     *scene;
+    Ui::Widget          *ui;
+    QGraphicsScene      *scene;
     QGraphicsPixmapItem *bg1, *bg2;
     QTimer *bgTimer;
     QTimer *colisionTimer;
     QTimer *olaTimer;
+    QTimer *timerMeta;
+    QTimer *timerHUD;
+
     Barco  *barco;
     QList<Ola*> olas;
     Viento *viento;
-    int     vidas;
-    QGraphicsTextItem *vidasTexto;
-    QTimer *timerMeta;
 
-    QPushButton     *btnNivel2;
+    int vidas;
+    int tiempoRestante;
+
+    QGraphicsTextItem *vidasTexto;
+    QGraphicsTextItem *txtTiempo;
+    QGraphicsTextItem *txtPuntos;
+
     Nivel2Oscuridad *m_nivel2;
 };
 

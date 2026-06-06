@@ -1,7 +1,8 @@
 #include "widget.h"
 #include "ui_widget.h"
-#include "nivel2oscuridad.h"   // ← aquí va el include completo
-#include <QDebug>
+#include "nivel2oscuridad.h"
+#include <QtMath>
+#include <QGraphicsRectItem>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -57,6 +58,47 @@ Widget::Widget(QWidget *parent)
     vidasTexto->setPos(10, 10);
     vidasTexto->setZValue(10);
     scene->addItem(vidasTexto);
+    // Tiempo
+    tiempoRestante = 60;
+    txtTiempo = new QGraphicsTextItem();
+    txtTiempo->setDefaultTextColor(Qt::white);
+    txtTiempo->setFont(QFont("Arial", 16, QFont::Bold));
+    txtTiempo->setPlainText("⏱ 60s");
+    txtTiempo->setPos(10, 40);
+    txtTiempo->setZValue(10);
+    scene->addItem(txtTiempo);
+
+    // Puntos
+    txtPuntos = new QGraphicsTextItem();
+    txtPuntos->setDefaultTextColor(QColor(255, 215, 0));
+    txtPuntos->setFont(QFont("Arial", 16, QFont::Bold));
+    txtPuntos->setPlainText("⭐ 0 pts");
+    txtPuntos->setPos(10, 70);
+    txtPuntos->setZValue(10);
+    scene->addItem(txtPuntos);
+
+    // Timer HUD — actualiza cada segundo
+    timerHUD = new QTimer(this);
+    connect(timerHUD, &QTimer::timeout, this, [this]() {
+        tiempoRestante--;
+        txtTiempo->setPlainText(QString("⏱ %1s").arg(tiempoRestante));
+        txtPuntos->setPlainText(QString("⭐ %1 pts").arg((60 - tiempoRestante) * 10));
+        if (tiempoRestante <= 0) timerHUD->stop();
+    });
+    timerHUD->start(1000);
+    // Efecto borracho — oscilación sinusoidal lateral
+    QTimer *timerBorracho = new QTimer(this);
+    float *tiempoBorracho = new float(0.0f);
+    connect(timerBorracho, &QTimer::timeout, this, [this, tiempoBorracho]() {
+        *tiempoBorracho += 0.05f;
+        // desplazamiento_lateral(t) = A_ebriedad * sin(f * t)
+        float offsetX = 8.0f * static_cast<float>(qSin(*tiempoBorracho));
+        float newX = qBound(scene->sceneRect().left(),
+                            barco->x() + offsetX,
+                            scene->sceneRect().right() - barco->boundingRect().width() * barco->scale());
+        barco->setX(newX);
+    });
+    timerBorracho->start(50);
 
     // Timer colisiones
     colisionTimer = new QTimer(this);
@@ -68,17 +110,6 @@ Widget::Widget(QWidget *parent)
     connect(timerMeta, &QTimer::timeout, this, &Widget::juegoGanado);
     timerMeta->setSingleShot(true);
     timerMeta->start(60000);
-
-    // Botón Nivel 2
-    m_nivel2 = nullptr;
-    btnNivel2 = new QPushButton("🌑  Ir al Nivel 2", this);
-    btnNivel2->setGeometry(10, 400, 180, 36);
-    btnNivel2->setStyleSheet(
-        "QPushButton{background:#102040;color:white;"
-        "border:2px solid #3a80b8;border-radius:6px;font-size:13px;}"
-        "QPushButton:hover{background:#1a4070;}");
-    btnNivel2->setGeometry(350, 320, 200, 40);;;
-    connect(btnNivel2, &QPushButton::clicked, this, &Widget::iniciarNivel2);
 }
 
 
@@ -128,11 +159,10 @@ void Widget::bgMove()
 
 void Widget::verificarColisiones()
 {
-    QList<Ola *> olasValidas;
-    for (Ola *ola : olas) {
+    QList<Ola*> olasValidas;
+    for (Ola *ola : olas)
         if (ola && ola->scene() != nullptr)
             olasValidas.append(ola);
-    }
     olas = olasValidas;
 
     for (Ola *ola : olas) {
@@ -140,12 +170,34 @@ void Widget::verificarColisiones()
             vidas--;
             vidasTexto->setPlainText("Vidas: " + QString::number(vidas));
             ola->setPos(scene->sceneRect().width() + 100, ola->y());
-
             if (vidas <= 0) {
-                vidasTexto->setPlainText("¡Game Over!");
                 bgTimer->stop();
                 colisionTimer->stop();
                 olaTimer->stop();
+                timerMeta->stop();
+                timerHUD->stop();
+
+                QGraphicsRectItem* overlay = new QGraphicsRectItem(scene->sceneRect());
+                overlay->setBrush(QColor(0, 0, 0, 160));
+                overlay->setPen(Qt::NoPen);
+                overlay->setZValue(20);
+                scene->addItem(overlay);
+
+                QGraphicsTextItem* txtGO = new QGraphicsTextItem("💀 ¡Game Over!");
+                txtGO->setDefaultTextColor(Qt::red);
+                txtGO->setFont(QFont("Arial", 32, QFont::Bold));
+                txtGO->setPos(scene->sceneRect().width()/2 - 160,
+                              scene->sceneRect().height()/2 - 60);
+                txtGO->setZValue(21);
+                scene->addItem(txtGO);
+
+                QGraphicsTextItem* txtRein = new QGraphicsTextItem("Cierra y abre para reintentar");
+                txtRein->setDefaultTextColor(Qt::white);
+                txtRein->setFont(QFont("Arial", 16));
+                txtRein->setPos(scene->sceneRect().width()/2 - 160,
+                                scene->sceneRect().height()/2 + 10);
+                txtRein->setZValue(21);
+                scene->addItem(txtRein);
             }
             break;
         }
@@ -155,13 +207,15 @@ void Widget::verificarColisiones()
 void Widget::crearOla()
 {
     QPixmap spriteOlas(":/imagenes/Olas.png");
-    int configs[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+    int configs[4][2] = {{0,0},{0,1},{1,0},{1,1}};
     int randomConfig = rand() % 4;
-    int carriles[2] = {250, 360};
-    int randomCarril = rand() % 2;
 
-    Ola *ola = new Ola(spriteOlas, configs[randomConfig][0], configs[randomConfig][1], this);
-    ola->setPos(scene->sceneRect().width(), carriles[randomCarril]);
+    // Posición Y aleatoria en toda la pantalla
+    int randomY = rand() % static_cast<int>(scene->sceneRect().height());
+
+    Ola *ola = new Ola(spriteOlas, configs[randomConfig][0],
+                       configs[randomConfig][1], this);
+    ola->setPos(scene->sceneRect().width(), randomY);
     scene->addItem(ola);
     olas.append(ola);
 }
@@ -172,14 +226,9 @@ void Widget::juegoGanado()
     colisionTimer->stop();
     olaTimer->stop();
     timerMeta->stop();
+    timerHUD->stop();
 
-    vidasTexto->setPlainText("¡Encontraste el tesoro!");
-    vidasTexto->setDefaultTextColor(Qt::yellow);
-    vidasTexto->setFont(QFont("Arial", 24, QFont::Bold));
-    vidasTexto->setPos(scene->sceneRect().width() / 2 - 180, scene->sceneRect().height() / 2 - 20);
-    btnNivel2->raise();
-    btnNivel2->show();
-    btnNivel2->setFocus();
+    iniciarNivel2();
 }
 
 void Widget::iniciarNivel2()
@@ -189,8 +238,6 @@ void Widget::iniciarNivel2()
     colisionTimer->stop();
     olaTimer->stop();
     timerMeta->stop();
-
-    btnNivel2->hide();
 
     // Crear Nivel 2
     if (m_nivel2) { m_nivel2->pausar(); delete m_nivel2; }
@@ -211,9 +258,6 @@ void Widget::iniciarNivel2()
         txt->setFont(QFont("Arial", 20, QFont::Bold));
         txt->setPos(80, 320);
         m_nivel2->getEscena()->addItem(txt);
-        btnNivel2->setText("↩ Reintentar N2");
-        btnNivel2->show();
-        btnNivel2->raise();
     });
 
     m_nivel2->iniciar();
@@ -225,9 +269,6 @@ void Widget::iniciarNivel2()
         txt->setFont(QFont("Arial", 20, QFont::Bold));
         txt->setPos(80, 320);
         m_nivel2->getEscena()->addItem(txt);
-        btnNivel2->setText("↩ Reintentar N2");
-        btnNivel2->show();
-        btnNivel2->raise();
     });
 
     m_nivel2->iniciar();
@@ -240,3 +281,4 @@ void Widget::keyReleaseEvent(QKeyEvent *event)
         return;
     }
 }
+

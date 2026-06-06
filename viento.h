@@ -1,11 +1,11 @@
 #ifndef VIENTO_H
 #define VIENTO_H
 
-#include <QObject>
-#include <QGraphicsRectItem>
 #include <QGraphicsLineItem>
-#include <QTimer>
+#include <QGraphicsRectItem>
 #include <QList>
+#include <QObject>
+#include <QTimer>
 
 class Viento : public QObject, public QGraphicsRectItem
 {
@@ -23,7 +23,7 @@ private:
     QTimer *timerActivacion;
     bool activo;
     QRectF sceneBounds;
-    QList<QGraphicsLineItem*> lineas;
+    QList<QGraphicsLineItem *> lineas;
 };
 
 #endif // VIENTO_H
